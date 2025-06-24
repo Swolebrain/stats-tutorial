@@ -9,25 +9,25 @@
       <div class="chart-wrapper">
         <svg :width="chartWidth" :height="chartHeight" class="histogram-svg">
           <!-- Y-axis -->
-          <line 
-            :x1="margin.left" 
-            :y1="margin.top" 
-            :x2="margin.left" 
+          <line
+            :x1="margin.left"
+            :y1="margin.top"
+            :x2="margin.left"
             :y2="chartHeight - margin.bottom"
-            stroke="#666" 
+            stroke="#666"
             stroke-width="2"
           />
-          
+
           <!-- X-axis -->
-          <line 
-            :x1="margin.left" 
-            :y1="chartHeight - margin.bottom" 
-            :x2="chartWidth - margin.right" 
+          <line
+            :x1="margin.left"
+            :y1="chartHeight - margin.bottom"
+            :x2="chartWidth - margin.right"
             :y2="chartHeight - margin.bottom"
-            stroke="#666" 
+            stroke="#666"
             stroke-width="2"
           />
-          
+
           <!-- Bars -->
           <rect
             v-for="(bar, index) in bars"
@@ -41,7 +41,7 @@
             stroke-width="1"
             rx="2"
           />
-          
+
           <!-- X-axis labels -->
           <text
             v-for="(label, index) in xLabels"
@@ -49,12 +49,15 @@
             :x="label.x"
             :y="label.y"
             text-anchor="middle"
-            font-size="12"
+            :font-size="xLabels.length > 15 ? '10' : '12'"
             fill="#666"
+            :transform="
+              xLabels.length > 20 ? `rotate(-45, ${label.x}, ${label.y})` : ''
+            "
           >
             {{ label.text }}
           </text>
-          
+
           <!-- Y-axis labels -->
           <text
             v-for="(label, index) in yLabels"
@@ -67,7 +70,7 @@
           >
             {{ label.text }}
           </text>
-          
+
           <!-- Axis titles -->
           <text
             :x="chartWidth / 2"
@@ -79,7 +82,7 @@
           >
             Number of Successes
           </text>
-          
+
           <text
             :x="15"
             :y="chartHeight / 2"
@@ -98,81 +101,134 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type PropType } from 'vue'
+import { computed, type PropType } from "vue";
 
 interface HistogramData {
-  labels: string[]
-  data: number[]
+  labels: string[];
+  data: number[];
 }
 
 const props = defineProps({
   histogramData: {
     type: Object as PropType<HistogramData>,
-    required: true
+    required: true,
   },
   title: {
     type: String,
-    default: 'Simulation Results Distribution'
-  }
-})
+    default: "Simulation Results Distribution",
+  },
+});
 
-const chartWidth = 600
-const chartHeight = 400
-const margin = { top: 20, right: 20, bottom: 60, left: 60 }
+const chartWidth = 600;
+const chartHeight = 400;
+const margin = { top: 20, right: 20, bottom: 60, left: 60 };
 
 const hasData = computed(() => {
-  return props.histogramData && props.histogramData.labels.length > 0 && props.histogramData.data.length > 0
-})
+  return (
+    props.histogramData &&
+    props.histogramData.labels.length > 0 &&
+    props.histogramData.data.length > 0
+  );
+});
 
 const maxValue = computed(() => {
-  return hasData.value ? Math.max(...props.histogramData.data) : 0
-})
+  return hasData.value ? Math.max(...props.histogramData.data) : 0;
+});
 
-const plotWidth = computed(() => chartWidth - margin.left - margin.right)
-const plotHeight = computed(() => chartHeight - margin.top - margin.bottom)
+const plotWidth = computed(() => chartWidth - margin.left - margin.right);
+const plotHeight = computed(() => chartHeight - margin.top - margin.bottom);
 
 const bars = computed(() => {
-  if (!hasData.value) return []
-  
-  const barWidth = plotWidth.value / props.histogramData.labels.length
-  const scale = plotHeight.value / maxValue.value
-  
+  if (!hasData.value) return [];
+
+  const barWidth = plotWidth.value / props.histogramData.labels.length;
+  const scale = plotHeight.value / maxValue.value;
+
   return props.histogramData.data.map((value, index) => {
-    const height = value * scale
+    const height = value * scale;
     return {
       x: margin.left + index * barWidth + 2,
       y: chartHeight - margin.bottom - height,
       width: barWidth - 4,
-      height: height
-    }
-  })
-})
+      height: height,
+    };
+  });
+});
 
 const xLabels = computed(() => {
-  if (!hasData.value) return []
-  
-  const barWidth = plotWidth.value / props.histogramData.labels.length
-  
-  return props.histogramData.labels.map((label, index) => ({
-    x: margin.left + index * barWidth + barWidth / 2,
-    y: chartHeight - margin.bottom + 20,
-    text: label
-  }))
-})
+  if (!hasData.value) return [];
+
+  const totalBars = props.histogramData.labels.length;
+  const barWidth = plotWidth.value / totalBars;
+
+  const labels = [];
+
+  // Show label for EVERY bar to eliminate confusion
+  for (let i = 0; i < totalBars; i++) {
+    const label = props.histogramData.labels[i];
+    // Extract center value from range labels like "45-47" -> "46"
+    let displayText;
+    if (label.includes("-")) {
+      const parts = label.split("-");
+      const start = parseInt(parts[0]);
+      const end = parseInt(parts[1]);
+      displayText = Math.round((start + end) / 2).toString();
+    } else {
+      displayText = label;
+    }
+
+    labels.push({
+      x: margin.left + i * barWidth + barWidth / 2,
+      y: chartHeight - margin.bottom + 20,
+      text: displayText,
+    });
+  }
+
+  return labels;
+});
 
 const yLabels = computed(() => {
-  if (!hasData.value) return []
-  
-  const steps = 5
-  const stepValue = maxValue.value / steps
-  const stepHeight = plotHeight.value / steps
-  
-  return Array.from({ length: steps + 1 }, (_, index) => ({
-    x: margin.left - 10,
-    y: chartHeight - margin.bottom - index * stepHeight + 5,
-    text: Math.round(index * stepValue).toString()
-  }))
-})
+  if (!hasData.value) return [];
+
+  const maxFrequency = maxValue.value;
+  const steps = 5;
+
+  // Calculate step size, ensuring we get nice round numbers
+  let stepValue = maxFrequency / steps;
+
+  // Round step value to nice numbers (1, 2, 5, 10, 20, 50, etc.)
+  if (stepValue > 0) {
+    const magnitude = Math.pow(10, Math.floor(Math.log10(stepValue)));
+    const normalized = stepValue / magnitude;
+
+    if (normalized <= 1) stepValue = magnitude;
+    else if (normalized <= 2) stepValue = 2 * magnitude;
+    else if (normalized <= 5) stepValue = 5 * magnitude;
+    else stepValue = 10 * magnitude;
+  }
+
+  // Generate labels from 0 to maxFrequency with the calculated step
+  const labels = [];
+  for (let value = 0; value <= maxFrequency; value += stepValue) {
+    const normalizedValue = Math.round(value);
+    const yPosition =
+      chartHeight -
+      margin.bottom -
+      (normalizedValue / maxFrequency) * plotHeight.value +
+      5;
+
+    labels.push({
+      x: margin.left - 10,
+      y: yPosition,
+      text: normalizedValue.toString(),
+    });
+
+    // Stop if we've reached or exceeded the max frequency
+    if (normalizedValue >= maxFrequency) break;
+  }
+
+  return labels;
+});
 </script>
 
 <style scoped>
@@ -240,4 +296,4 @@ rect {
 rect:hover {
   opacity: 0.7;
 }
-</style> 
+</style>

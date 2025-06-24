@@ -3,7 +3,10 @@
     <div class="container">
       <header class="header">
         <h1>Statistics Simulator</h1>
-        <p>Visualize the distribution of random events across multiple experiments</p>
+        <p>
+          Visualize the distribution of random events across multiple
+          experiments
+        </p>
       </header>
 
       <div class="content">
@@ -13,72 +16,67 @@
             <label for="probability">Probability of Success</label>
             <input
               id="probability"
-              type="range"
+              type="number"
               min="0"
               max="1"
-              step="0.01"
+              step="any"
               :value="params.probabilityOfSuccess"
               @input="updateProbability"
+              @blur="validateProbability"
+              placeholder="0.5"
+              :class="{ 'invalid': !isProbabilityValid }"
             />
-            <div class="value-display">{{ (params.probabilityOfSuccess * 100).toFixed(1) }}%</div>
+            <div class="value-display" :class="{ 'error': !isProbabilityValid }">
+              <span v-if="isProbabilityValid">{{ (params.probabilityOfSuccess * 100).toFixed(params.probabilityOfSuccess < 0.01 ? 3 : 1) }}%</span>
+              <span v-else class="error-text">Must be between 0.0 and 1.0</span>
+            </div>
           </div>
 
           <div class="control-group">
             <label for="trials">Trials per Experiment</label>
             <input
               id="trials"
-              type="range"
-              min="10"
-              max="500"
-              step="10"
+              type="number"
+              step="1"
               :value="params.trialsPerExperiment"
               @input="updateTrials"
+              placeholder="100"
             />
-            <div class="value-display">{{ params.trialsPerExperiment }} trials</div>
+            <div class="value-display">
+              {{ params.trialsPerExperiment }} trials
+            </div>
           </div>
 
           <div class="control-group">
             <label for="experiments">Number of Experiments</label>
             <input
               id="experiments"
-              type="range"
-              min="100"
-              max="5000"
-              step="100"
+              type="number"
+              step="1"
               :value="params.numberOfExperiments"
               @input="updateExperiments"
+              placeholder="1000"
             />
-            <div class="value-display">{{ params.numberOfExperiments }} experiments</div>
-          </div>
-
-          <div class="control-group">
-            <label for="speed">Animation Speed</label>
-            <input
-              id="speed"
-              type="range"
-              min="10"
-              max="200"
-              step="10"
-              :value="200 - animationSpeed"
-              @input="updateSpeed"
-            />
-            <div class="value-display">{{ Math.round((200 - animationSpeed) / 2) }}% speed</div>
+            <div class="value-display">
+              {{ params.numberOfExperiments }} experiments
+            </div>
           </div>
         </div>
 
         <!-- Control Buttons -->
         <div class="button-container">
-          <button
-            class="btn"
-            :disabled="isRunning"
+          <button 
+            class="btn" 
+            :disabled="isRunning || !isProbabilityValid" 
             @click="startSimulation"
+            :title="!isProbabilityValid ? 'Please enter a valid probability (0.0 to 1.0)' : ''"
           >
-            {{ isRunning ? 'Running...' : 'Start Simulation' }}
+            {{ isRunning ? "Running..." : "Start Simulation" }}
           </button>
           <button
             v-if="isRunning"
             class="btn"
-            style="margin-left: 10px; background: #dc3545;"
+            style="margin-left: 10px; background: #dc3545"
             @click="stopSimulation"
           >
             Stop
@@ -86,7 +84,7 @@
           <button
             v-if="!isRunning && results.length > 0"
             class="btn"
-            style="margin-left: 10px; background: #28a745;"
+            style="margin-left: 10px; background: #28a745"
             @click="reset"
           >
             Reset
@@ -98,11 +96,16 @@
           <div class="progress-bar">
             <div
               class="progress-fill"
-              :style="{ width: `${(currentExperiment / params.numberOfExperiments) * 100}%` }"
+              :style="{
+                width: `${
+                  (currentExperiment / params.numberOfExperiments) * 100
+                }%`,
+              }"
             ></div>
           </div>
           <div class="progress-text">
-            Experiment {{ currentExperiment }} of {{ params.numberOfExperiments }}
+            Experiment {{ currentExperiment }} of
+            {{ params.numberOfExperiments }}
           </div>
         </div>
 
@@ -114,36 +117,28 @@
           />
         </div>
 
-        <!-- Statistics -->
-        <div v-if="results.length > 0" class="stats">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.mean.toFixed(2) }}</div>
-            <div class="stat-label">Mean</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.standardDeviation.toFixed(2) }}</div>
-            <div class="stat-label">Standard Deviation</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.expectedValue.toFixed(2) }}</div>
-            <div class="stat-label">Expected Value</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.min }} - {{ statistics.max }}</div>
-            <div class="stat-label">Range</div>
-          </div>
-        </div>
-
         <!-- Instructions -->
         <div v-if="results.length === 0" class="instructions">
           <h3>How to use the simulator:</h3>
           <ol>
-            <li>Adjust the <strong>Probability of Success</strong> (e.g., 0.5 for a fair coin)</li>
-            <li>Set the <strong>Trials per Experiment</strong> (e.g., 100 coin flips)</li>
-            <li>Choose the <strong>Number of Experiments</strong> to run</li>
+            <li>
+              Enter the <strong>Probability of Success</strong> (0.0 to 1.0,
+              e.g., 0.5 for a fair coin)
+            </li>
+            <li>
+              Set the <strong>Trials per Experiment</strong> (any positive
+              integer, e.g., 100 coin flips)
+            </li>
+            <li>
+              Choose the <strong>Number of Experiments</strong> to run (any
+              positive integer)
+            </li>
             <li>Click <strong>Start Simulation</strong> to see the results</li>
           </ol>
-          <p>The histogram will show the distribution of success counts across all experiments.</p>
+          <p>
+            The histogram will show the distribution of success counts across
+            all experiments.
+          </p>
         </div>
       </div>
     </div>
@@ -151,54 +146,131 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import HistogramChart from './components/HistogramChart.vue'
-import { useStatisticsSimulator } from './composables/useStatisticsSimulator'
+import { computed, ref } from "vue";
+import HistogramChart from "./components/HistogramChart.vue";
+import { useStatisticsSimulator } from "./composables/useStatisticsSimulator";
 
 const {
   isRunning,
   results,
   currentExperiment,
   params,
-  animationSpeed,
   histogramData,
   statistics,
   runSimulation,
   stopSimulation,
   reset,
   updateParams,
-  updateAnimationSpeed
-} = useStatisticsSimulator()
+} = useStatisticsSimulator();
+
+// Validation state
+const isProbabilityValid = ref(true);
 
 // Event handlers for controls
 const updateProbability = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  updateParams({ probabilityOfSuccess: parseFloat(target.value) })
-}
+  const target = event.target as HTMLInputElement;
+  const inputValue = target.value;
+  
+  // Allow empty input (user is still typing)
+  if (inputValue === '') {
+    isProbabilityValid.value = false;
+    return;
+  }
+  
+  const value = parseFloat(inputValue);
+  
+  // Debug logging
+  console.log('Input value:', inputValue, 'Parsed value:', value);
+  
+  // Validate the input - allow any number between 0 and 1 (inclusive)
+  // Use small epsilon for floating point comparison
+  const epsilon = 1e-10;
+  if (isNaN(value) || value < -epsilon || value > 1 + epsilon) {
+    isProbabilityValid.value = false;
+    console.log('Validation failed:', { 
+      isNaN: isNaN(value), 
+      tooSmall: value < -epsilon, 
+      tooLarge: value > 1 + epsilon,
+      actualValue: value 
+    });
+    return; // Don't update if invalid
+  }
+  
+  // Valid input - update the parameter
+  isProbabilityValid.value = true;
+  updateParams({ probabilityOfSuccess: value });
+  
+  // Reset results when parameters change to avoid mismatch
+  if (results.value.length > 0) {
+    reset();
+  }
+};
+
+const validateProbability = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const inputValue = target.value;
+  
+  // Don't validate empty input
+  if (inputValue === '') {
+    isProbabilityValid.value = false;
+    return;
+  }
+  
+  const value = parseFloat(inputValue);
+  
+  console.log('Blur validation - Input:', inputValue, 'Parsed:', value);
+  
+  // Use same epsilon for consistency
+  const epsilon = 1e-10;
+  if (isNaN(value) || value < -epsilon || value > 1 + epsilon) {
+    isProbabilityValid.value = false;
+    console.log('Blur validation failed, resetting to:', params.value.probabilityOfSuccess);
+    // Reset to last valid value
+    target.value = params.value.probabilityOfSuccess.toString();
+  } else {
+    isProbabilityValid.value = true;
+    // Ensure the parameter is updated even on blur
+    updateParams({ probabilityOfSuccess: value });
+  }
+};
 
 const updateTrials = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  updateParams({ trialsPerExperiment: parseInt(target.value) })
-}
+  const target = event.target as HTMLInputElement;
+  const value = parseInt(target.value);
+  if (!isNaN(value) && value > 0) {
+    updateParams({ trialsPerExperiment: value });
+    // Reset results when parameters change to avoid mismatch
+    if (results.value.length > 0) {
+      reset();
+    }
+  }
+};
 
 const updateExperiments = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  updateParams({ numberOfExperiments: parseInt(target.value) })
-}
-
-const updateSpeed = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const speed = 200 - parseInt(target.value)
-  updateAnimationSpeed(speed)
-}
+  const target = event.target as HTMLInputElement;
+  const value = parseInt(target.value);
+  if (!isNaN(value) && value > 0) {
+    updateParams({ numberOfExperiments: value });
+    // Reset results when parameters change to avoid mismatch
+    if (results.value.length > 0) {
+      reset();
+    }
+  }
+};
 
 const startSimulation = async () => {
-  try {
-    await runSimulation()
-  } catch (error) {
-    console.error('Simulation error:', error)
+  // Double-check validation before starting
+  if (!isProbabilityValid.value) {
+    console.warn("Cannot start simulation: Invalid probability value");
+    return;
   }
-}
+  
+  try {
+    await runSimulation();
+  } catch (error) {
+    console.error("Simulation error:", error);
+  }
+};
 </script>
 
 <style scoped>
@@ -255,4 +327,29 @@ const startSimulation = async () => {
   color: #666;
   font-style: italic;
 }
-</style> 
+
+/* Validation styles */
+.invalid {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.value-display.error {
+  color: #dc3545;
+}
+
+.error-text {
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  background-color: inherit;
+  transform: none;
+}
+</style>
