@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    "ms-vscode.vscode-typescript-next",
+    "ms-vscode.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "dsznajder.es7-react-js-snippets",
+    "ms-vscode.vscode-json",
+    "ms-vscode.vscode-css-language-features",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "eamodio.gitlens",
+    "ms-vscode.vscode-npm-script",
+    "ms-vscode.test-adapter-converter",
+    "bradlc.vscode-tailwindcss"
+  ]
+} 

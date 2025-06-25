@@ -1,137 +1,204 @@
-# Statistics Simulator
+# Statistics Simulator - React + TypeScript + Chart.js
 
-A Vue 3 + TypeScript frontend application that visualizes the results of repeating statistical random events across multiple experiments using interactive histograms.
+A powerful React-based statistics simulator with unlimited histogram bins using Chart.js for visualization.
 
-## Features
+## 🚀 Features
 
-- **Interactive Histogram Visualization**: Uses Chart.js to display the distribution of success counts across experiments
-- **Real-time Animation**: Watch the histogram build gradually as experiments complete
-- **Adjustable Parameters**: 
-  - Probability of Success (0-100%)
-  - Trials per Experiment (10-500)
-  - Number of Experiments (100-5000)
-  - Animation Speed (10-200ms between experiments)
-- **Statistical Analysis**: Displays mean, standard deviation, expected value, and range
-- **Responsive Design**: Works on desktop and mobile devices
-- **TypeScript**: Fully typed for better development experience
-- **Testable**: Comprehensive unit tests for simulation logic
+- **React 18** with TypeScript for modern development
+- **Chart.js** integration for professional histogram visualization
+- **Unlimited Bins** - No artificial 20-bin limitation
+- **Real-time Animation** - Watch experiments build up gradually
+- **Responsive Design** - Works on desktop and mobile
+- **Input Validation** - Proper form validation with error handling
+- **Clean Architecture** - Modular components and custom hooks
 
-## Getting Started
+## 📦 Installation
 
-### Prerequisites
-
-- Node.js (version 16 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd statistics-simulator
-```
-
-2. Install dependencies:
+1. **Install dependencies:**
 ```bash
 npm install
 ```
 
-3. Start the development server:
+2. **Start development server:**
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
-
-### Building for Production
-
+3. **Build for production:**
 ```bash
 npm run build
 ```
 
-### Running Tests
+## 🔄 Migration from Vue 3
 
-```bash
-npm test
+This project was successfully migrated from Vue 3 to React. Here are the key changes made:
+
+### Dependencies Changed
+- **Removed:** `vue`, `vue-chartjs`, `@vitejs/plugin-vue`, `vue-tsc`, `@vue/tsconfig`
+- **Added:** `react`, `react-dom`, `react-chartjs-2`, `@vitejs/plugin-react`, `@types/react`, `@types/react-dom`
+
+### Architecture Changes
+
+#### 1. **Vue Composables → React Hooks**
+- `src/composables/useStatisticsSimulator.ts` → `src/hooks/useStatisticsSimulator.ts`
+- `ref()` → `useState()`
+- `computed()` → `useMemo()`
+- `readonly()` → Removed (not needed in React)
+
+#### 2. **Vue Components → React Components**
+- `src/App.vue` → `src/App.tsx`
+- `src/components/HistogramChart.vue` → `src/components/HistogramChart.tsx`
+- Template syntax → JSX
+- Vue event handlers → React event handlers
+
+#### 3. **Chart Implementation**
+- **Old:** Custom SVG implementation with 20-bin limitation
+- **New:** Chart.js with react-chartjs-2 wrapper
+- **Benefit:** Professional charts with unlimited bins and better performance
+
+#### 4. **Configuration Updates**
+- `vite.config.ts`: Vue plugin → React plugin
+- `tsconfig.json`: Vue-specific config → React-specific config
+- `index.html`: Updated script reference and root element
+- `env.d.ts`: Removed Vue module declarations
+
+### Key Improvements
+
+#### Unlimited Bins
+```typescript
+// OLD (Vue): Limited to 20 bins
+const binCount = Math.min(20, max - min + 1) // Max 20 bins
+
+// NEW (React): Unlimited bins
+const binCount = max - min + 1 // One bin per possible value
 ```
 
-## Usage
+#### Chart.js Integration
+```tsx
+// Professional Chart.js histogram with full customization
+<Bar 
+  ref={chartRef} 
+  data={chartData} 
+  options={options} 
+/>
+```
 
-1. **Set Parameters**:
-   - **Probability of Success**: Set the probability of a successful trial (e.g., 0.5 for a fair coin)
-   - **Trials per Experiment**: Number of trials in each experiment (e.g., 100 coin flips)
-   - **Number of Experiments**: Total number of experiments to run
-   - **Animation Speed**: Control how fast the histogram builds
+#### Better State Management
+```typescript
+// React hooks with proper dependency management
+const histogramData = useMemo(() => {
+  // Computation logic
+}, [results]) // Proper dependencies
+```
 
-2. **Run Simulation**: Click "Start Simulation" to begin
+## 🎯 Usage
 
-3. **View Results**: 
-   - Watch the histogram build in real-time
-   - See statistical summary cards
-   - Use Stop/Reset buttons to control the simulation
+1. **Set Parameters:**
+   - **Probability of Success:** 0.0 to 1.0 (e.g., 0.5 for fair coin)
+   - **Trials per Experiment:** Any positive integer (e.g., 100)
+   - **Number of Experiments:** Any positive integer (e.g., 1000)
 
-## Project Structure
+2. **Run Simulation:**
+   - Click "Start Simulation" to begin
+   - Watch the histogram build up in real-time
+   - Use "Stop" to interrupt or "Reset" to clear results
+
+3. **Analyze Results:**
+   - Histogram shows distribution of success counts
+   - Each bar represents a specific number of successes
+   - Unlimited bins provide precise visualization
+
+## 🏗️ Project Structure
 
 ```
 src/
+├── hooks/
+│   └── useStatisticsSimulator.ts    # React hook for simulation logic
 ├── components/
-│   └── HistogramChart.vue          # Chart.js histogram component
-├── composables/
-│   ├── useStatisticsSimulator.ts   # Core simulation logic
-│   └── __tests__/                  # Unit tests
-├── App.vue                         # Main application component
-├── main.ts                         # Application entry point
+│   └── HistogramChart.tsx           # Chart.js histogram component
+├── App.tsx                          # Main React component
+├── main.tsx                         # React entry point
 └── style.css                       # Global styles
 ```
 
-## Technical Details
+## 🔧 Technical Details
 
-### Simulation Algorithm
+### React Hook Features
+- `useState` for state management
+- `useMemo` for computed values
+- `useCallback` for optimized event handlers
+- Proper TypeScript typing throughout
 
-The simulator implements a binomial distribution simulation:
+### Chart.js Configuration
+- Responsive design with maintainAspectRatio: false
+- Custom tooltips and axis labels
+- Smooth animations with easing
+- Automatic cleanup on unmount
 
-1. **Single Trial**: Generates a random number and compares it to the probability of success
-2. **Experiment**: Runs multiple trials and counts successes
-3. **Multiple Experiments**: Repeats experiments and records success counts
-4. **Histogram**: Bins the success counts and displays frequency distribution
+### Performance Optimizations
+- Memoized calculations to prevent unnecessary re-renders
+- Optimized Chart.js configuration
+- Efficient state updates during animation
 
-### Key Components
+## 🧪 Testing
 
-- **`useStatisticsSimulator`**: Vue 3 composable containing all simulation logic
-- **`HistogramChart`**: Vue component using Chart.js for visualization
-- **TypeScript Interfaces**: Strong typing for all data structures
-- **Responsive CSS**: Modern, mobile-friendly design
+```bash
+# Run tests
+npm run test
 
-### Testing
+# Run tests with UI
+npm run test:ui
+```
 
-The application includes comprehensive unit tests for:
-- Parameter validation and updates
-- Simulation logic correctness
-- Statistical calculations
-- Edge cases and error handling
+## 🚀 Deployment
 
-## Examples
+```bash
+# Build for production
+npm run build
 
-### Coin Flip Simulation
-- Probability: 0.5 (50%)
-- Trials per Experiment: 100
-- Number of Experiments: 1000
-- Expected Result: Bell curve centered around 50 successes
+# Preview production build
+npm run preview
+```
 
-### Biased Coin Simulation
-- Probability: 0.7 (70%)
-- Trials per Experiment: 100
-- Number of Experiments: 1000
-- Expected Result: Bell curve centered around 70 successes
+## 📊 Example Use Cases
 
-## Contributing
+- **Coin Flipping:** Set probability to 0.5, trials to 100
+- **Dice Rolling:** Set probability to 1/6 ≈ 0.167 for specific number
+- **Quality Control:** Set probability to defect rate, trials to sample size
+- **A/B Testing:** Set probability to conversion rate, trials to visitors
+
+## 🎨 Customization
+
+The Chart.js implementation allows easy customization:
+
+```typescript
+const options = {
+  // Customize colors
+  backgroundColor: 'rgba(102, 126, 234, 0.8)',
+  borderColor: 'rgba(102, 126, 234, 1)',
+  
+  // Customize animations
+  animation: {
+    duration: 1000,
+    easing: 'easeInOutQuart'
+  },
+  
+  // Customize scales and labels
+  scales: {
+    x: { title: { text: 'Number of Successes' } },
+    y: { title: { text: 'Frequency' } }
+  }
+}
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new functionality
+4. Add tests if applicable
 5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License. 
+MIT License - feel free to use this project for educational or commercial purposes. 

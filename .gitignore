@@ -1,13 +1,21 @@
-# Dependencies
-node_modules/
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# Build outputs
-dist/
-build/
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Production builds
+dist
+dist-ssr
+build
 *.tsbuildinfo
 
 # Environment variables
@@ -17,12 +25,15 @@ build/
 .env.test.local
 .env.production.local
 
-# IDE and Editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # OS generated files
 .DS_Store
@@ -33,9 +44,13 @@ build/
 ehthumbs.db
 Thumbs.db
 
-# Logs
-logs
-*.log
+# Testing
+coverage
+.nyc_output
+
+# Temporary folders
+tmp/
+temp/
 
 # Runtime data
 pids
@@ -43,27 +58,11 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
-jspm_packages/
-
 # Optional npm cache directory
 .npm
 
 # Optional eslint cache
 .eslintcache
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
 
 # Yarn Integrity file
 .yarn-integrity
@@ -72,60 +71,12 @@ jspm_packages/
 .cache
 .parcel-cache
 
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# Temporary folders
-tmp/
-temp/
-
-# Local Netlify folder
-.netlify
-
-# Vite
-.vite/
-
-# TypeScript
-*.tsbuildinfo
-
-# Test results
-test-results/
-playwright-report/
-playwright/.cache/
-
 # Storybook build outputs
 storybook-static
 
+# Vite
+.vite
+
 # Local development
 .local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw? 
+.netlify 
