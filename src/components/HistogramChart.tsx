@@ -29,31 +29,58 @@ interface HistogramChartProps {
   histogramData: HistogramData
   title?: string
   isAnimating?: boolean
+  selectedBar?: number | null
+  onBarClick?: (barIndex: number) => void
 }
 
 const HistogramChart: React.FC<HistogramChartProps> = ({ 
   histogramData, 
   title = "Simulation Results Distribution",
-  isAnimating = false 
+  isAnimating = false,
+  selectedBar = null,
+  onBarClick
 }) => {
   const chartRef = useRef<ChartJS<'bar'>>(null)
 
   const hasData = histogramData && histogramData.labels.length > 0 && histogramData.data.length > 0
 
   // Memoize chart data to prevent unnecessary re-renders
-  const chartData = useMemo(() => ({
-    labels: histogramData.labels,
-    datasets: [
-      {
-        label: 'Frequency',
-        data: histogramData.data,
-        backgroundColor: 'rgba(102, 126, 234, 0.8)',
-        borderColor: 'rgba(102, 126, 234, 1)',
-        borderWidth: 1,
-        borderRadius: 2,
-      },
-    ],
-  }), [histogramData.labels, histogramData.data])
+  const chartData = useMemo(() => {
+    // Create background colors array with highlighting for selected bar
+    const backgroundColors = histogramData.data.map((_, index) => {
+      if (selectedBar !== null) {
+        const successCount = parseInt(histogramData.labels[index])
+        return successCount === selectedBar 
+          ? 'rgba(255, 99, 132, 0.8)' // Highlighted color for selected bar
+          : 'rgba(102, 126, 234, 0.4)' // Dimmed color for non-selected bars
+      }
+      return 'rgba(102, 126, 234, 0.8)' // Default color
+    })
+
+    const borderColors = histogramData.data.map((_, index) => {
+      if (selectedBar !== null) {
+        const successCount = parseInt(histogramData.labels[index])
+        return successCount === selectedBar 
+          ? 'rgba(255, 99, 132, 1)' // Highlighted border for selected bar
+          : 'rgba(102, 126, 234, 0.6)' // Dimmed border for non-selected bars
+      }
+      return 'rgba(102, 126, 234, 1)' // Default border
+    })
+
+    return {
+      labels: histogramData.labels,
+      datasets: [
+        {
+          label: 'Frequency',
+          data: histogramData.data,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 2,
+          borderRadius: 2,
+        },
+      ],
+    }
+  }, [histogramData.labels, histogramData.data, selectedBar])
 
   const options = useMemo(() => ({
     responsive: true,
@@ -86,6 +113,9 @@ const HistogramChart: React.FC<HistogramChartProps> = ({
           },
           label: (context: any) => {
             return `Frequency: ${context.parsed.y}`
+          },
+          afterLabel: (_context: any) => {
+            return 'Click to view statistics for this bar'
           },
         },
       },
@@ -138,10 +168,22 @@ const HistogramChart: React.FC<HistogramChartProps> = ({
     },
     elements: {
       bar: {
-        borderWidth: 1,
+        borderWidth: 2,
       },
     },
-  }), [title, histogramData.labels.length, isAnimating])
+    onClick: (_event: any, elements: any[]) => {
+      if (elements.length > 0 && onBarClick) {
+        const barIndex = elements[0].index
+        onBarClick(barIndex)
+      }
+    },
+    onHover: (_event: any, elements: any[]) => {
+      const canvas = _event?.native?.target
+      if (canvas) {
+        canvas.style.cursor = elements.length > 0 ? 'pointer' : 'default'
+      }
+    },
+  }), [title, histogramData.labels.length, isAnimating, onBarClick])
 
   // Force chart update when data changes during animation
   useEffect(() => {
@@ -149,6 +191,13 @@ const HistogramChart: React.FC<HistogramChartProps> = ({
       chartRef.current.update('none') // Update without animation
     }
   }, [histogramData, isAnimating])
+
+  // Update chart when selected bar changes
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.update('none')
+    }
+  }, [selectedBar])
 
   // Clean up chart on unmount
   useEffect(() => {
@@ -181,6 +230,19 @@ const HistogramChart: React.FC<HistogramChartProps> = ({
             redraw={isAnimating}
           />
         </div>
+        {selectedBar !== null && (
+          <div className="selection-info" style={{ 
+            textAlign: 'center', 
+            marginTop: '10px', 
+            padding: '8px', 
+            backgroundColor: 'rgba(255, 99, 132, 0.1)', 
+            borderRadius: '4px',
+            fontSize: '14px',
+            color: '#666'
+          }}>
+            Selected: {selectedBar} successes (click elsewhere to deselect)
+          </div>
+        )}
       </div>
     </div>
   )
